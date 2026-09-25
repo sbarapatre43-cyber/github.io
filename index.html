@@ -1,0 +1,1316 @@
+<!<!DOCTYPE html>
+DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeNet IoT - Smart Environment & Safety Networks</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#00f2fe',
+                            600: '#0284c7',
+                            900: '#0f172a',
+                            dark: '#0b0f19',
+                            card: '#111827',
+                            border: '#1f293d'
+                        },
+                        hazard: {
+                            safe: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#ef4444'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #070a12;
+            color: #f3f4f6;
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 25px -5px rgba(0, 242, 254, 0.3);
+        }
+
+        .glow-danger {
+            box-shadow: 0 0 35px 0px rgba(239, 68, 68, 0.5);
+        }
+
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-nav {
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .hazard-pulse {
+            animation: pulse-red 1s infinite alternate;
+        }
+
+        @keyframes pulse-red {
+            0% { background-color: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); }
+            100% { background-color: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.9); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f293d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f2fe;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-50 glass-nav">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-xl text-black shadow-lg shadow-cyan-500/20">
+                        <i data-lucide="shield-alert" class="w-6 h-6 text-slate-950 font-bold"></i>
+                    </div>
+                    <div>
+                        <span class="text-lg font-bold tracking-wider bg-gradient-to-r from-white via-slate-200 to-cyan-400 bg-clip-text text-transparent">SafeNet <span class="text-cyan-400 font-mono text-xs px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-500/10">IoT</span></span>
+                        <p class="text-[10px] text-slate-400 hidden sm:block">Smart Environment & Safety Networks</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Nav Links -->
+                <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-300">
+                    <a href="#dashboard" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+                    <a href="#architecture" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="cpu" class="w-4 h-4"></i> Architecture</a>
+                    <a href="#analytics" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="line-chart" class="w-4 h-4"></i> Analytics</a>
+                    <a href="#stack" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="layers" class="w-4 h-4"></i> Tech Stack</a>
+                    <a href="#team" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4"></i> Team</a>
+                </nav>
+
+                <!-- Gateway Status Badge -->
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-mono">
+                        <span id="gateway-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="gateway-status" class="text-slate-300">Gateway: Active</span>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden glass-panel border-b border-slate-800 px-4 pt-2 pb-4 space-y-2 text-sm">
+            <a href="#dashboard" class="block py-2 text-slate-300 hover:text-cyan-400">Dashboard</a>
+            <a href="#architecture" class="block py-2 text-slate-300 hover:text-cyan-400">Architecture</a>
+            <a href="#analytics" class="block py-2 text-slate-300 hover:text-cyan-400">Analytics & Logs</a>
+            <a href="#stack" class="block py-2 text-slate-300 hover:text-cyan-400">Tech Stack</a>
+            <a href="#team" class="block py-2 text-slate-300 hover:text-cyan-400">Team & Guide</a>
+        </div>
+    </header>
+
+    <!-- Emergency Alert Notification Banner (Hidden by default) -->
+    <div id="emergency-banner" class="hidden sticky top-16 z-40 bg-red-600/90 backdrop-blur-md text-white px-4 py-3 shadow-xl transition-all border-b border-red-500 hazard-pulse">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-red-950 rounded-lg animate-bounce">
+                    <i data-lucide="triangle-alert" class="w-6 h-6 text-red-400"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm tracking-wide uppercase text-red-100 flex items-center gap-2">
+                        <span>CRITICAL SAFETY HAZARD DETECTED</span>
+                        <span id="hazard-tag" class="bg-red-900 text-red-200 text-xs px-2 py-0.5 rounded font-mono">GAS LEAK & FIRE</span>
+                    </h4>
+                    <p class="text-xs text-red-100/90" id="hazard-desc">Sensors reported threshold breach! Buzzer activated & cloud notification triggered.</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="mute-buzzer-btn" onclick="toggleBuzzerSound()" class="px-3 py-1.5 rounded-lg bg-red-950 hover:bg-red-900 border border-red-700 text-xs font-semibold flex items-center gap-1.5 transition">
+                    <i data-lucide="volume-x" class="w-4 h-4"></i>
+                    <span id="mute-btn-text">Silence Alarm</span>
+                </button>
+                <button onclick="resetHazardSimulation()" class="px-3 py-1.5 rounded-lg bg-white text-red-900 hover:bg-slate-100 text-xs font-bold transition">
+                    Reset System
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="relative pt-8 pb-12 overflow-hidden border-b border-slate-800/80">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,242,254,0.15),rgba(255,255,255,0))]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-12 gap-8 items-center">
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium">
+                        <span class="flex h-2 w-2 rounded-full bg-cyan-400"></span>
+                        CEP Project • Guide: Dr. A.A. Deshmukh
+                    </div>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                        Smart Environment & <br/>
+                        <span class="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">Safety Monitoring System</span>
+                    </h1>
+                    <p class="text-slate-400 text-base sm:text-lg max-w-2xl leading-relaxed">
+                        An IoT-based continuous environmental safety solution. Designed for early detection and rapid response against critical hazards like flammable gas leaks, smoke, fire outbreaks, and extreme temperatures.
+                    </p>
+                    
+                    <!-- Quick Stats Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="text-xs text-slate-400 block mb-1">Connected Sensors</span>
+                            <span class="text-xl font-bold font-mono text-cyan-400 flex items-center gap-1.5">
+                                <i data-lucide="cpu" class="w-4 h-4"></i> 5 Active
+                            </span>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="text-xs text-slate-400 block mb-1">System Status</span>
+                            <span id="hero-status-text" class="text-xl font-bold font-mono text-emerald-400 flex items-center gap-1.5">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i> Safe
+                            </span>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="text-xs text-slate-400 block mb-1">Response Time</span>
+                            <span class="text-xl font-bold font-mono text-indigo-400 flex items-center gap-1.5">
+                                <i data-lucide="zap" class="w-4 h-4"></i> &lt; 350ms
+                            </span>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                            <span class="text-xs text-slate-400 block mb-1">Cloud Sync</span>
+                            <span class="text-xl font-bold font-mono text-blue-400 flex items-center gap-1.5">
+                                <i data-lucide="cloud" class="w-4 h-4"></i> Live
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <a href="#dashboard" class="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-cyan-500/20 transition">
+                            <i data-lucide="activity" class="w-4 h-4"></i> View Live Dashboard
+                        </a>
+                        <button onclick="triggerSimulatedHazard()" class="px-5 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/40 text-red-400 font-bold text-sm flex items-center gap-2 transition">
+                            <i data-lucide="flame" class="w-4 h-4 text-red-500"></i> Simulate Hazard Emergency
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hero Visual / Live Mini Preview -->
+                <div class="lg:col-span-5">
+                    <div class="glass-panel rounded-2xl p-6 relative overflow-hidden border border-slate-800 glow-cyan">
+                        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                                <span class="text-xs font-mono text-slate-400 ml-2">NodeMCU / ESP32 Gateway</span>
+                            </div>
+                            <span class="text-xs font-mono text-cyan-400 bg-cyan-950/80 border border-cyan-800/60 px-2 py-0.5 rounded">WiFi Connected</span>
+                        </div>
+
+                        <!-- Animated Nodes Visual -->
+                        <div class="space-y-4 font-mono text-xs">
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="radio" class="w-4 h-4 text-cyan-400 animate-pulse"></i>
+                                    <span>Gas Sensor (MQ-2)</span>
+                                </div>
+                                <span id="hero-gas-val" class="text-emerald-400 font-bold">120 PPM (Normal)</span>
+                            </div>
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="thermometer" class="w-4 h-4 text-amber-400"></i>
+                                    <span>Temp & Humidity (DHT11)</span>
+                                </div>
+                                <span id="hero-temp-val" class="text-emerald-400 font-bold">28.5°C | 54% RH</span>
+                            </div>
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="wind" class="w-4 h-4 text-indigo-400"></i>
+                                    <span>Air Quality (MQ-135)</span>
+                                </div>
+                                <span id="hero-aqi-val" class="text-emerald-400 font-bold">AQI 42 (Good)</span>
+                            </div>
+                            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center">
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="bell-ring" class="w-4 h-4 text-red-400"></i>
+                                    <span>Safety Controller Response</span>
+                                </div>
+                                <span id="hero-actuator-val" class="text-slate-400">Buzzer: OFF | LED: GREEN</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                            <span>Protocol: MQTT/HTTP</span>
+                            <span>Baud: 115200</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Interactive Dashboard Section -->
+    <section id="dashboard" class="py-12 bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            
+            <!-- Dashboard Header & Controls -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                        <i data-lucide="gauge" class="w-6 h-6 text-cyan-400"></i>
+                        Live Safety Telemetry
+                    </h2>
+                    <p class="text-slate-400 text-sm">Real-time telemetry feeds from deployed IoT sensor nodes.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Live Simulation Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="sim-toggle" class="sr-only peer" checked onchange="toggleSimulationMode(this.checked)">
+                        <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                        <span class="ml-2 text-xs font-mono text-slate-300">Live Data Stream</span>
+                    </label>
+
+                    <!-- Manual Trigger Hazard Button -->
+                    <button onclick="triggerSimulatedHazard()" class="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition">
+                        <i data-lucide="flame" class="w-4 h-4"></i> Test Hazard Alert
+                    </button>
+
+                    <!-- Reset System Button -->
+                    <button onclick="resetHazardSimulation()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sensor Telemetry Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- 1. Gas Leakage Card (MQ-2) -->
+                <div id="card-gas" class="glass-panel p-5 rounded-2xl border border-slate-800 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="p-2.5 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                <i data-lucide="cloud-fog" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Gas Leakage</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">MQ-2 LPG/Methane</p>
+                            </div>
+                        </div>
+                        <span id="gas-badge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SAFE</span>
+                    </div>
+
+                    <div class="my-4">
+                        <div class="flex items-baseline space-x-2">
+                            <span id="gas-val" class="text-3xl font-extrabold font-mono text-white">125</span>
+                            <span class="text-xs font-mono text-slate-400">PPM</span>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+                            <div id="gas-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 25%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 font-mono border-t border-slate-800/80 pt-3">
+                        <span>Threshold: 400 PPM</span>
+                        <span id="gas-subtext" class="text-emerald-400">Normal Atmosphere</span>
+                    </div>
+                </div>
+
+                <!-- 2. Temperature Card (DHT11) -->
+                <div id="card-temp" class="glass-panel p-5 rounded-2xl border border-slate-800 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="p-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
+                                <i data-lucide="thermometer" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Temperature</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">DHT11 Sensor</p>
+                            </div>
+                        </div>
+                        <span id="temp-badge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">NORMAL</span>
+                    </div>
+
+                    <div class="my-4">
+                        <div class="flex items-baseline space-x-2">
+                            <span id="temp-val" class="text-3xl font-extrabold font-mono text-white">27.8</span>
+                            <span class="text-xs font-mono text-slate-400">°C</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+                            <div id="temp-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 35%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 font-mono border-t border-slate-800/80 pt-3">
+                        <span>Max Threshold: 45°C</span>
+                        <span id="temp-subtext" class="text-slate-300">Optimal Range</span>
+                    </div>
+                </div>
+
+                <!-- 3. Smoke Density Card -->
+                <div id="card-smoke" class="glass-panel p-5 rounded-2xl border border-slate-800 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="p-2.5 rounded-xl bg-slate-500/10 text-slate-300 border border-slate-500/20">
+                                <i data-lucide="wind" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Smoke Density</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">Photoelectric Node</p>
+                            </div>
+                        </div>
+                        <span id="smoke-badge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CLEAR</span>
+                    </div>
+
+                    <div class="my-4">
+                        <div class="flex items-baseline space-x-2">
+                            <span id="smoke-val" class="text-3xl font-extrabold font-mono text-white">12</span>
+                            <span class="text-xs font-mono text-slate-400">% Opacity</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+                            <div id="smoke-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 12%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 font-mono border-t border-slate-800/80 pt-3">
+                        <span>Limit: 35% Opacity</span>
+                        <span id="smoke-subtext" class="text-emerald-400">No Smoke Detected</span>
+                    </div>
+                </div>
+
+                <!-- 4. Air Quality Index Card (MQ-135) -->
+                <div id="card-aqi" class="glass-panel p-5 rounded-2xl border border-slate-800 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Air Quality (AQI)</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">MQ-135 Air Monitor</p>
+                            </div>
+                        </div>
+                        <span id="aqi-badge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">GOOD</span>
+                    </div>
+
+                    <div class="my-4">
+                        <div class="flex items-baseline space-x-2">
+                            <span id="aqi-val" class="text-3xl font-extrabold font-mono text-white">45</span>
+                            <span class="text-xs font-mono text-slate-400">AQI</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+                            <div id="aqi-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 22%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 font-mono border-t border-slate-800/80 pt-3">
+                        <span>Status Scale: 0-300</span>
+                        <span id="aqi-subtext" class="text-emerald-400">Clean Air Environment</span>
+                    </div>
+                </div>
+
+                <!-- 5. Fire / Flame Sensor Card -->
+                <div id="card-flame" class="glass-panel p-5 rounded-2xl border border-slate-800 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="p-2.5 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
+                                <i data-lucide="flame" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Fire / Flame</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">IR Flame Detector</p>
+                            </div>
+                        </div>
+                        <span id="flame-badge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">NO FIRE</span>
+                    </div>
+
+                    <div class="my-4">
+                        <div class="flex items-center space-x-3">
+                            <div id="flame-icon-bg" class="p-3 rounded-xl bg-slate-800 text-slate-400">
+                                <i data-lucide="shield" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <span id="flame-status-text" class="text-lg font-bold font-mono text-white block">Zone Secure</span>
+                                <span id="flame-ir-reading" class="text-xs font-mono text-slate-400">IR Intensity: Low</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 font-mono border-t border-slate-800/80 pt-3">
+                        <span>IR Spectrum Band</span>
+                        <span id="flame-subtext" class="text-emerald-400">No Flame Detected</span>
+                    </div>
+                </div>
+
+                <!-- 6. Humidity Card -->
+                <div id="card-humidity" class="glass-panel p-5 rounded-2xl border border-slate-800 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                <i data-lucide="droplets" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Humidity</h3>
+                                <p class="text-[11px] text-slate-400 font-mono">Relative Humidity</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">OPTIMAL</span>
+                    </div>
+
+                    <div class="my-4">
+                        <div class="flex items-baseline space-x-2">
+                            <span id="humidity-val" class="text-3xl font-extrabold font-mono text-white">52</span>
+                            <span class="text-xs font-mono text-slate-400">% RH</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+                            <div id="humidity-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 52%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 font-mono border-t border-slate-800/80 pt-3">
+                        <span>Comfort Level</span>
+                        <span class="text-blue-400">Balanced Conditions</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- System Architecture Workflow Section -->
+    <section id="architecture" class="py-16 bg-slate-900/60 border-y border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div class="text-center max-w-3xl mx-auto space-y-3">
+                <span class="text-xs font-bold font-mono text-cyan-400 uppercase tracking-widest bg-cyan-950 px-3 py-1 rounded-full border border-cyan-800">Proposed Work Flow</span>
+                <h2 class="text-3xl font-extrabold text-white">System Architecture & Pipeline</h2>
+                <p class="text-slate-400 text-sm">How sensor data flows from physical hardware inputs through processing to real-time alerts and cloud storage.</p>
+            </div>
+
+            <!-- Workflow Diagram Interactive Steps -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+
+                <!-- Step 1: Inputs -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative hover:border-cyan-500/50 transition group">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold text-lg font-mono mb-4 border border-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-black transition">1</div>
+                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="radio-receiver" class="w-4 h-4 text-cyan-400"></i> Sensors (Input)
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                        Collects raw telemetry data from Gas, Smoke, Flame, Temperature, and Air Quality sensors continuously.
+                    </p>
+                    <ul class="text-[11px] font-mono text-slate-300 space-y-1 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <li>• Gas Sensor (MQ-2)</li>
+                        <li>• Temp & Humidity (DHT11)</li>
+                        <li>• Smoke & AQI (MQ-135)</li>
+                        <li>• Flame IR Sensor</li>
+                    </ul>
+                </div>
+
+                <!-- Step 2: Control -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative hover:border-blue-500/50 transition group">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-lg font-mono mb-4 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-black transition">2</div>
+                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="cpu" class="w-4 h-4 text-blue-400"></i> Control Unit
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                        The NodeMCU / ESP32 microcontroller processes analog/digital signals using C/C++ firmware.
+                    </p>
+                    <ul class="text-[11px] font-mono text-slate-300 space-y-1 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <li>• Microcontroller Processing</li>
+                        <li>• Signal Conditioning</li>
+                        <li>• Wi-Fi Data Transmission</li>
+                    </ul>
+                </div>
+
+                <!-- Step 3: Analyze -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative hover:border-indigo-500/50 transition group">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-lg font-mono mb-4 border border-indigo-500/20 group-hover:bg-indigo-500 group-hover:text-black transition">3</div>
+                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="binary" class="w-4 h-4 text-indigo-400"></i> Analyze & Logic
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                        Python backend & logic evaluates incoming sensor streams against safety threshold algorithms.
+                    </p>
+                    <ul class="text-[11px] font-mono text-slate-300 space-y-1 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <li>• Threshold Detection</li>
+                        <li>• Python Data Analysis</li>
+                        <li>• Trend Evaluation</li>
+                    </ul>
+                </div>
+
+                <!-- Step 4: Alert -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative hover:border-red-500/50 transition group">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center font-bold text-lg font-mono mb-4 border border-red-500/20 group-hover:bg-red-500 group-hover:text-black transition">4</div>
+                    <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                        <i data-lucide="siren" class="w-4 h-4 text-red-400"></i> Alert & Action
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-3">
+                        Triggers immediate local hardware alerts (Buzzer & Red LED) and updates cloud dashboard.
+                    </p>
+                    <ul class="text-[11px] font-mono text-slate-300 space-y-1 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <li>• High-Decibel Alarm</li>
+                        <li>• Visual LED Alert</li>
+                        <li>• Web Dashboard Warning</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics & Historical Chart Section -->
+    <section id="analytics" class="py-16 bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold font-mono text-cyan-400 uppercase tracking-widest bg-cyan-950 px-3 py-1 rounded-full border border-cyan-800">Cloud Data Intelligence</span>
+                    <h2 class="text-2xl font-extrabold text-white mt-2 flex items-center gap-2">
+                        <i data-lucide="line-chart" class="w-6 h-6 text-cyan-400"></i> Sensor Telemetry Analytics
+                    </h2>
+                    <p class="text-slate-400 text-sm">Historical trend analysis generated via Python & Cloud logging.</p>
+                </div>
+                
+                <button onclick="exportLogsCSV()" class="self-start md:self-auto px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition">
+                    <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i> Export Telemetry CSV Log
+                </button>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <span class="text-xs font-mono text-slate-300 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Real-time Trends (Gas PPM vs Temp °C)
+                    </span>
+                    <span class="text-[11px] font-mono text-slate-400">Polling Interval: 2.0s</span>
+                </div>
+                <div class="h-72 w-full">
+                    <canvas id="telemetryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Telemetry Log Table -->
+            <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden">
+                <div class="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i data-lucide="list-tree" class="w-4 h-4 text-indigo-400"></i> Recent Incident & Reading Logs
+                    </h3>
+                    <span class="text-xs text-slate-400 font-mono">Auto-refreshing</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="bg-slate-950 text-slate-400 uppercase border-b border-slate-800">
+                            <tr>
+                                <th class="p-3.5">Timestamp</th>
+                                <th class="p-3.5">Gas (PPM)</th>
+                                <th class="p-3.5">Temp (°C)</th>
+                                <th class="p-3.5">AQI</th>
+                                <th class="p-3.5">Flame Status</th>
+                                <th class="p-3.5">Safety Level</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body" class="divide-y divide-slate-800/60 text-slate-300">
+                            <!-- Populated dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Hardware & Software Tech Stack Section -->
+    <section id="stack" class="py-16 bg-slate-900/60 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div class="text-center max-w-3xl mx-auto space-y-3">
+                <h2 class="text-3xl font-extrabold text-white">Hardware & Software Specifications</h2>
+                <p class="text-slate-400 text-sm">Industrial-grade components integrated for high reliability and swift response.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Hardware Stack Card -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+                    <div class="flex items-center space-x-3 pb-4 mb-4 border-b border-slate-800">
+                        <div class="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            <i data-lucide="circuit-board" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Hardware Platform</h3>
+                            <p class="text-xs text-slate-400">Physical sensors, controllers & alert actuators</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-cyan-400 block">MQ-2 Gas Sensor</span>
+                            <span class="text-[11px] text-slate-400">Detects LPG, Methane, Smoke, Flammable gases.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-cyan-400 block">DHT11 Temp & Humidity</span>
+                            <span class="text-[11px] text-slate-400">Digital ambient temperature and humidity sensor.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-cyan-400 block">MQ-135 Air Quality</span>
+                            <span class="text-[11px] text-slate-400">Monitors hazardous airborne gases & air purity.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-cyan-400 block">Buzzer & LED Module</span>
+                            <span class="text-[11px] text-slate-400">High-decibel audible alarm and warning light.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 col-span-full">
+                            <span class="text-xs font-bold text-cyan-400 block">ESP32 / NodeMCU Controller</span>
+                            <span class="text-[11px] text-slate-400">32-bit Wi-Fi enabled microcontroller for fast signal processing.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Software Stack Card -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+                    <div class="flex items-center space-x-3 pb-4 mb-4 border-b border-slate-800">
+                        <div class="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            <i data-lucide="code-2" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Software Architecture</h3>
+                            <p class="text-xs text-slate-400">Embedded firmware, analytics and dashboard</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-indigo-400 block">C / C++ Firmware</span>
+                            <span class="text-[11px] text-slate-400">Microcontroller code for fast sensor reading logic.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-indigo-400 block">Python Data Analysis</span>
+                            <span class="text-[11px] text-slate-400">Processing trends and evaluating hazard probabilities.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-indigo-400 block">Web Dashboard UI</span>
+                            <span class="text-[11px] text-slate-400">Responsive real-time monitoring interface.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                            <span class="text-xs font-bold text-indigo-400 block">Cloud Database</span>
+                            <span class="text-[11px] text-slate-400">Remote telemetry storage for historical audit reports.</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 col-span-full">
+                            <span class="text-xs font-bold text-indigo-400 block">Wi-Fi Protocol (MQTT/HTTP)</span>
+                            <span class="text-[11px] text-slate-400">Low-latency data transmission from edge nodes to cloud.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Future Scope Section -->
+    <section class="py-16 bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="text-center max-w-3xl mx-auto space-y-3">
+                <span class="text-xs font-bold font-mono text-cyan-400 uppercase tracking-widest bg-cyan-950 px-3 py-1 rounded-full border border-cyan-800">Roadmap</span>
+                <h2 class="text-3xl font-extrabold text-white">Future Scope & Enhancements</h2>
+                <p class="text-slate-400 text-sm">Next-generation upgrades planned for scaling SafeNet IoT.</p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+                    <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 w-fit mb-3">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-sm mb-1">Additional Hazards</h3>
+                    <p class="text-xs text-slate-400">Integrate Vibration, Pressure, and Dust particulate sensors for chemical plants.</p>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+                    <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 w-fit mb-3">
+                        <i data-lucide="smartphone" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-sm mb-1">Mobile Push App</h3>
+                    <p class="text-xs text-slate-400">Dedicated iOS & Android mobile apps for instantaneous push notifications.</p>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+                    <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 w-fit mb-3">
+                        <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-sm mb-1">AI / ML Predictive Risk</h3>
+                    <p class="text-xs text-slate-400">Machine learning models to predict fire or gas leaks before they occur.</p>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+                    <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 w-fit mb-3">
+                        <i data-lucide="lock" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-sm mb-1">Enhanced Security</h3>
+                    <p class="text-xs text-slate-400">Role-based access control and encrypted IoT payload channels.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Members & Credits Section -->
+    <section id="team" class="py-16 bg-slate-900/60 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            <div class="text-center max-w-3xl mx-auto space-y-3">
+                <span class="text-xs font-bold font-mono text-cyan-400 uppercase tracking-widest bg-cyan-950 px-3 py-1 rounded-full border border-cyan-800">CEP Project Group</span>
+                <h2 class="text-3xl font-extrabold text-white">Project Members & Mentors</h2>
+                <p class="text-slate-400 text-sm">Under the guidance of esteemed faculty members.</p>
+            </div>
+
+            <!-- Guides Header -->
+            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <div class="glass-panel p-5 rounded-2xl border border-cyan-500/30 flex items-center space-x-4 bg-cyan-950/20">
+                    <div class="p-3.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                        <i data-lucide="user-check" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs text-cyan-400 font-mono block">Project Guide</span>
+                        <h3 class="text-lg font-bold text-white">Dr. A.A. Deshmukh</h3>
+                        <p class="text-xs text-slate-400">Faculty Guide & Advisor</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl border border-blue-500/30 flex items-center space-x-4 bg-blue-950/20">
+                    <div class="p-3.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                        <i data-lucide="award" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs text-blue-400 font-mono block">Head of Department</span>
+                        <h3 class="text-lg font-bold text-white">Dr. R. Taley</h3>
+                        <p class="text-xs text-slate-400">HOD Electronics / Tech Dept.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Members Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                <div class="glass-panel p-4 rounded-xl text-center border border-slate-800">
+                    <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 font-bold">
+                        WK
+                    </div>
+                    <h4 class="font-bold text-white text-sm">Wajahat Khan</h4>
+                    <p class="text-[11px] text-slate-400">Group Member</p>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl text-center border border-slate-800">
+                    <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 font-bold">
+                        YG
+                    </div>
+                    <h4 class="font-bold text-white text-sm">Yash Ghawat</h4>
+                    <p class="text-[11px] text-slate-400">Group Member</p>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl text-center border border-slate-800">
+                    <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 font-bold">
+                        KB
+                    </div>
+                    <h4 class="font-bold text-white text-sm">Kashish Barapatre</h4>
+                    <p class="text-[11px] text-slate-400">Group Member</p>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl text-center border border-slate-800">
+                    <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 font-bold">
+                        AM
+                    </div>
+                    <h4 class="font-bold text-white text-sm">Anuja Malokar</h4>
+                    <p class="text-[11px] text-slate-400">Group Member</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-slate-950 border-t border-slate-800 text-center text-xs text-slate-500 font-mono">
+        <div class="max-w-7xl mx-auto px-4 space-y-2">
+            <p>SMART ENVIRONMENT AND SAFETY NETWORKS • CEP IoT Project</p>
+            <p>© SafeNet IoT Framework • Designed for Industrial & Laboratory Safety</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Global State & Sensor Thresholds
+        let isSimulating = true;
+        let isHazardActive = false;
+        let audioCtx = null;
+        let buzzerInterval = null;
+        let isMuted = false;
+
+        // Base sensor values
+        const sensorData = {
+            gas: 125, // PPM
+            temp: 27.8, // °C
+            smoke: 12, // % Opacity
+            aqi: 45, // Index
+            humidity: 52, // % RH
+            flame: false // Boolean
+        };
+
+        const THRESHOLDS = {
+            gas: 400,
+            temp: 45.0,
+            smoke: 35,
+            aqi: 150
+        };
+
+        // Telemetry Logs Buffer
+        const telemetryLogs = [];
+
+        // Chart Instance
+        let telemetryChart = null;
+
+        // Initialize App on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initChart();
+            startDataSimulation();
+            setupMobileMenu();
+        });
+
+        // Setup Mobile Nav Toggle
+        function setupMobileMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            if (btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                });
+            }
+        }
+
+        // Initialize Chart.js
+        function initChart() {
+            const ctx = document.getElementById('telemetryChart').getContext('2d');
+            
+            const initialLabels = Array.from({length: 10}, (_, i) => {
+                const d = new Date(Date.now() - (9 - i) * 2000);
+                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            });
+
+            telemetryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: initialLabels,
+                    datasets: [
+                        {
+                            label: 'Gas Leakage (PPM)',
+                            data: [110, 115, 120, 125, 122, 128, 124, 126, 125, 125],
+                            borderColor: '#00f2fe',
+                            backgroundColor: 'rgba(0, 242, 254, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Temperature (°C)',
+                            data: [27.2, 27.4, 27.5, 27.6, 27.8, 27.7, 27.8, 27.9, 27.8, 27.8],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [4, 4],
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 400 },
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { size: 10, family: 'JetBrains Mono' } }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Gas PPM', color: '#00f2fe', font: { size: 10 } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { size: 10 } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Temp °C', color: '#ef4444', font: { size: 10 } },
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#9ca3af', font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e5e7eb', font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Live Data Loop Simulation
+        function startDataSimulation() {
+            setInterval(() => {
+                if (!isSimulating) return;
+
+                if (!isHazardActive) {
+                    // Slight normal random fluctuation
+                    sensorData.gas = Math.max(80, Math.min(250, sensorData.gas + (Math.random() * 8 - 4)));
+                    sensorData.temp = Math.max(22, Math.min(35, sensorData.temp + (Math.random() * 0.4 - 0.2)));
+                    sensorData.smoke = Math.max(5, Math.min(20, sensorData.smoke + (Math.random() * 2 - 1)));
+                    sensorData.aqi = Math.max(30, Math.min(80, sensorData.aqi + (Math.random() * 4 - 2)));
+                    sensorData.humidity = Math.max(40, Math.min(65, sensorData.humidity + (Math.random() * 1 - 0.5)));
+                    sensorData.flame = false;
+                } else {
+                    // Hazard values
+                    sensorData.gas = Math.min(950, sensorData.gas + Math.random() * 30 + 10);
+                    sensorData.temp = Math.min(68, sensorData.temp + Math.random() * 1.5 + 0.5);
+                    sensorData.smoke = Math.min(85, sensorData.smoke + Math.random() * 4 + 2);
+                    sensorData.aqi = Math.min(280, sensorData.aqi + Math.random() * 10 + 5);
+                    sensorData.flame = true;
+                }
+
+                updateDashboardUI();
+                updateChartAndLogs();
+
+            }, 2000);
+        }
+
+        // Toggle Live Simulation Checkbox
+        function toggleSimulationMode(enabled) {
+            isSimulating = enabled;
+            const dot = document.getElementById('gateway-dot');
+            const status = document.getElementById('gateway-status');
+            if (enabled) {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+                status.innerText = 'Gateway: Active';
+            } else {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+                status.innerText = 'Gateway: Paused';
+            }
+        }
+
+        // Trigger Emergency Hazard
+        function triggerSimulatedHazard() {
+            isHazardActive = true;
+            sensorData.gas = 520;
+            sensorData.temp = 48.5;
+            sensorData.smoke = 45;
+            sensorData.aqi = 190;
+            sensorData.flame = true;
+
+            // Show Emergency Banner
+            const banner = document.getElementById('emergency-banner');
+            banner.classList.remove('hidden');
+
+            // Play Web Audio Buzzer sound
+            startBuzzerSound();
+
+            updateDashboardUI();
+            updateChartAndLogs();
+        }
+
+        // Reset Hazard Simulation
+        function resetHazardSimulation() {
+            isHazardActive = false;
+            sensorData.gas = 125;
+            sensorData.temp = 27.8;
+            sensorData.smoke = 12;
+            sensorData.aqi = 45;
+            sensorData.humidity = 52;
+            sensorData.flame = false;
+
+            // Hide Banner
+            const banner = document.getElementById('emergency-banner');
+            banner.classList.add('hidden');
+
+            // Stop Sound
+            stopBuzzerSound();
+
+            updateDashboardUI();
+            updateChartAndLogs();
+        }
+
+        // Update Dashboard Elements
+        function updateDashboardUI() {
+            // Gas UI
+            const gasValEl = document.getElementById('gas-val');
+            const gasBarEl = document.getElementById('gas-bar');
+            const gasBadgeEl = document.getElementById('gas-badge');
+            const gasCard = document.getElementById('card-gas');
+            const gasSubtext = document.getElementById('gas-subtext');
+
+            const gasVal = Math.round(sensorData.gas);
+            gasValEl.innerText = gasVal;
+            gasBarEl.style.width = Math.min(100, (gasVal / 1000) * 100) + '%';
+
+            if (gasVal >= THRESHOLDS.gas) {
+                gasBadgeEl.innerText = 'DANGER LEAK';
+                gasBadgeEl.className = 'px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse';
+                gasBarEl.className = 'bg-red-500 h-2 rounded-full transition-all duration-500';
+                gasCard.classList.add('border-red-500/80', 'bg-red-950/20');
+                gasSubtext.innerText = 'HAZARDOUS GAS LEVEL!';
+                gasSubtext.className = 'text-red-400 font-bold';
+            } else {
+                gasBadgeEl.innerText = 'SAFE';
+                gasBadgeEl.className = 'px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                gasBarEl.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-500';
+                gasCard.classList.remove('border-red-500/80', 'bg-red-950/20');
+                gasSubtext.innerText = 'Normal Atmosphere';
+                gasSubtext.className = 'text-emerald-400';
+            }
+
+            // Temp UI
+            const tempValEl = document.getElementById('temp-val');
+            const tempBarEl = document.getElementById('temp-bar');
+            const tempBadgeEl = document.getElementById('temp-badge');
+            const tempCard = document.getElementById('card-temp');
+            const tempVal = sensorData.temp.toFixed(1);
+
+            tempValEl.innerText = tempVal;
+            tempBarEl.style.width = Math.min(100, (tempVal / 80) * 100) + '%';
+
+            if (tempVal >= THRESHOLDS.temp) {
+                tempBadgeEl.innerText = 'HIGH TEMP';
+                tempBadgeEl.className = 'px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse';
+                tempBarEl.className = 'bg-red-500 h-2 rounded-full transition-all duration-500';
+                tempCard.classList.add('border-red-500/80', 'bg-red-950/20');
+            } else {
+                tempBadgeEl.innerText = 'NORMAL';
+                tempBadgeEl.className = 'px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                tempBarEl.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-500';
+                tempCard.classList.remove('border-red-500/80', 'bg-red-950/20');
+            }
+
+            // Smoke UI
+            const smokeVal = Math.round(sensorData.smoke);
+            document.getElementById('smoke-val').innerText = smokeVal;
+            document.getElementById('smoke-bar').style.width = smokeVal + '%';
+
+            // AQI UI
+            const aqiVal = Math.round(sensorData.aqi);
+            document.getElementById('aqi-val').innerText = aqiVal;
+            document.getElementById('aqi-bar').style.width = Math.min(100, (aqiVal / 300) * 100) + '%';
+
+            // Flame UI
+            const flameBadge = document.getElementById('flame-badge');
+            const flameStatusText = document.getElementById('flame-status-text');
+            const flameIconBg = document.getElementById('flame-icon-bg');
+            const flameSubtext = document.getElementById('flame-subtext');
+
+            if (sensorData.flame) {
+                flameBadge.innerText = 'FIRE DETECTED';
+                flameBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-red-500 text-white border border-red-400 animate-bounce';
+                flameStatusText.innerText = 'FIRE ALERT!';
+                flameStatusText.className = 'text-lg font-bold font-mono text-red-400';
+                flameIconBg.className = 'p-3 rounded-xl bg-red-500/20 text-red-500';
+                flameSubtext.innerText = 'Infrared Flame Pulse High';
+                flameSubtext.className = 'text-red-400 font-bold';
+            } else {
+                flameBadge.innerText = 'NO FIRE';
+                flameBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                flameStatusText.innerText = 'Zone Secure';
+                flameStatusText.className = 'text-lg font-bold font-mono text-white';
+                flameIconBg.className = 'p-3 rounded-xl bg-slate-800 text-slate-400';
+                flameSubtext.innerText = 'No Flame Detected';
+                flameSubtext.className = 'text-emerald-400';
+            }
+
+            // Hero Mini Updates
+            document.getElementById('hero-gas-val').innerText = `${gasVal} PPM (${gasVal >= THRESHOLDS.gas ? 'DANGER' : 'Normal'})`;
+            document.getElementById('hero-gas-val').className = gasVal >= THRESHOLDS.gas ? 'text-red-400 font-bold' : 'text-emerald-400 font-bold';
+            
+            document.getElementById('hero-temp-val').innerText = `${tempVal}°C | ${Math.round(sensorData.humidity)}% RH`;
+            document.getElementById('hero-aqi-val').innerText = `AQI ${aqiVal} (${aqiVal > 100 ? 'Poor' : 'Good'})`;
+
+            const heroStatusText = document.getElementById('hero-status-text');
+            const heroActuator = document.getElementById('hero-actuator-val');
+            
+            if (isHazardActive || gasVal >= THRESHOLDS.gas || tempVal >= THRESHOLDS.temp || sensorData.flame) {
+                heroStatusText.innerHTML = '<i data-lucide="triangle-alert" class="w-4 h-4 text-red-500"></i> HAZARD ALERT';
+                heroStatusText.className = 'text-xl font-bold font-mono text-red-500 flex items-center gap-1.5 animate-pulse';
+                heroActuator.innerText = 'Buzzer: ALARM ON | LED: RED BLINKING';
+                heroActuator.className = 'text-red-400 font-bold';
+            } else {
+                heroStatusText.innerHTML = '<i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Safe';
+                heroStatusText.className = 'text-xl font-bold font-mono text-emerald-400 flex items-center gap-1.5';
+                heroActuator.innerText = 'Buzzer: OFF | LED: GREEN';
+                heroActuator.className = 'text-slate-400';
+            }
+            lucide.createIcons();
+        }
+
+        // Update Charts and Table Logs
+        function updateChartAndLogs() {
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            // Push Chart
+            if (telemetryChart) {
+                telemetryChart.data.labels.push(timeStr);
+                telemetryChart.data.datasets[0].data.push(Math.round(sensorData.gas));
+                telemetryChart.data.datasets[1].data.push(parseFloat(sensorData.temp.toFixed(1)));
+
+                if (telemetryChart.data.labels.length > 12) {
+                    telemetryChart.data.labels.shift();
+                    telemetryChart.data.datasets[0].data.shift();
+                    telemetryChart.data.datasets[1].data.shift();
+                }
+                telemetryChart.update();
+            }
+
+            // Push Table Log
+            const isUnsafe = sensorData.gas >= THRESHOLDS.gas || sensorData.temp >= THRESHOLDS.temp || sensorData.flame;
+            const logEntry = {
+                timestamp: timeStr,
+                gas: Math.round(sensorData.gas),
+                temp: sensorData.temp.toFixed(1),
+                aqi: Math.round(sensorData.aqi),
+                flame: sensorData.flame ? 'FIRE DETECTED' : 'CLEAR',
+                status: isUnsafe ? 'CRITICAL' : 'NORMAL'
+            };
+
+            telemetryLogs.unshift(logEntry);
+            if (telemetryLogs.length > 8) telemetryLogs.pop();
+
+            renderLogsTable();
+        }
+
+        // Render Table Body
+        function renderLogsTable() {
+            const tbody = document.getElementById('logs-table-body');
+            tbody.innerHTML = '';
+
+            telemetryLogs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.className = log.status === 'CRITICAL' ? 'bg-red-950/30 text-red-200' : 'hover:bg-slate-900/50';
+
+                const statusBadge = log.status === 'CRITICAL' 
+                    ? '<span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40 font-bold">UNSAFE</span>'
+                    : '<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SAFE</span>';
+
+                tr.innerHTML = `
+                    <td class="p-3.5">${log.timestamp}</td>
+                    <td class="p-3.5 font-bold">${log.gas} PPM</td>
+                    <td class="p-3.5">${log.temp} °C</td>
+                    <td class="p-3.5">${log.aqi}</td>
+                    <td class="p-3.5">${log.flame}</td>
+                    <td class="p-3.5">${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Web Audio API Buzzer Sound Generator
+        function startBuzzerSound() {
+            if (isMuted) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                if (buzzerInterval) clearInterval(buzzerInterval);
+
+                buzzerInterval = setInterval(() => {
+                    if (isMuted || !isHazardActive) return;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 tone
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                }, 400);
+
+            } catch (e) {
+                console.log('Audio playback prevented by browser policy until interaction.');
+            }
+        }
+
+        function stopBuzzerSound() {
+            if (buzzerInterval) {
+                clearInterval(buzzerInterval);
+                buzzerInterval = null;
+            }
+        }
+
+        function toggleBuzzerSound() {
+            isMuted = !isMuted;
+            const btnText = document.getElementById('mute-btn-text');
+            if (isMuted) {
+                btnText.innerText = 'Unmute Alarm';
+                stopBuzzerSound();
+            } else {
+                btnText.innerText = 'Silence Alarm';
+                if (isHazardActive) startBuzzerSound();
+            }
+        }
+
+        // Export Log Data to CSV
+        function exportLogsCSV() {
+            if (telemetryLogs.length === 0) {
+                alert('No logs available yet to export!');
+                return;
+            }
+
+            let csvContent = 'data:text/csv;charset=utf-8,Timestamp,Gas_PPM,Temperature_C,AQI,Flame_Status,Safety_Level\n';
+            telemetryLogs.forEach(row => {
+                csvContent += `${row.timestamp},${row.gas},${row.temp},${row.aqi},${row.flame},${row.status}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `SafeNet_Telemetry_Log_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
